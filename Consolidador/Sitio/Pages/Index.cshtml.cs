@@ -23,6 +23,9 @@ namespace Sitio.Pages
         public string IdModeloConsolidable { get; set; }
 
         [BindProperty]
+        public string NuevoIdMarca { get; set; }
+
+        [BindProperty]
         public string NuevoNombreModelo { get; set; }
         [BindProperty]
         public string NuevoNombreMarca { get; set; }
@@ -67,6 +70,11 @@ namespace Sitio.Pages
                     foreach (var cadaVehiculo in vehiculos)
                     {
                         cadaVehiculo.IdModelo = Convert.ToInt32(this.IdModeloConsolidable);
+                        int parserIdMarca;
+                        if (Int32.TryParse(this.NuevoIdMarca, out parserIdMarca))
+                        {
+                            cadaVehiculo.IdMarca = parserIdMarca;
+                        }
                     }
                 }
                 else
@@ -76,10 +84,23 @@ namespace Sitio.Pages
                         var modelo = _db.Modelos.Find(Convert.ToInt32(this.IdModeloConsolidable));
                         modelo.Nombre = this.NuevoNombreModelo;
 
-                        if (!string.IsNullOrEmpty(this.NuevoNombreMarca))
+                        int parserIdMarca;
+                        if (Int32.TryParse(this.NuevoIdMarca, out parserIdMarca))
                         {
-                            var marca = _db.Marcas.Find(Convert.ToInt32(modelo.IdMarca));
-                            marca.Nombre = this.NuevoNombreMarca;
+                            modelo.IdMarca = parserIdMarca;
+                            if (!string.IsNullOrEmpty(this.NuevoNombreMarca))
+                            {
+                                var marca = _db.Marcas.Find(parserIdMarca);
+                                marca.Nombre = this.NuevoNombreMarca;
+                            }
+                        }
+                        else
+                        {
+                            if (!string.IsNullOrEmpty(this.NuevoNombreMarca))
+                            {
+                                var marca = _db.Marcas.Find(Convert.ToInt32(modelo.IdMarca));
+                                marca.Nombre = this.NuevoNombreMarca;
+                            }
                         }
                     }
                 }
