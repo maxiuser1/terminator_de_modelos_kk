@@ -62,6 +62,12 @@ namespace Sitio.Pages
 
         public IActionResult OnPost()
         {
+            int? nuevoIdMarca = null;
+            if (Int32.TryParse(this.NuevoIdMarca, out int tempIdMarca))
+            {
+                nuevoIdMarca = tempIdMarca;
+            }
+
             foreach (var cada in Items.Where(t => t.Seleccionado))
             {
                 if (cada.IdModelo != Convert.ToInt32(this.IdModeloConsolidable))
@@ -70,39 +76,23 @@ namespace Sitio.Pages
                     foreach (var cadaVehiculo in vehiculos)
                     {
                         cadaVehiculo.IdModelo = Convert.ToInt32(this.IdModeloConsolidable);
-                        int parserIdMarca;
-                        if (Int32.TryParse(this.NuevoIdMarca, out parserIdMarca))
-                        {
-                            cadaVehiculo.IdMarca = parserIdMarca;
-                        }
+                        if (nuevoIdMarca.HasValue)
+                            cadaVehiculo.IdMarca = nuevoIdMarca.Value;
                     }
                 }
-                else
-                {
-                    if (!string.IsNullOrEmpty(this.NuevoNombreModelo))
-                    {
-                        var modelo = _db.Modelos.Find(Convert.ToInt32(this.IdModeloConsolidable));
-                        modelo.Nombre = this.NuevoNombreModelo;
 
-                        int parserIdMarca;
-                        if (Int32.TryParse(this.NuevoIdMarca, out parserIdMarca))
-                        {
-                            modelo.IdMarca = parserIdMarca;
-                            if (!string.IsNullOrEmpty(this.NuevoNombreMarca))
-                            {
-                                var marca = _db.Marcas.Find(parserIdMarca);
-                                marca.Nombre = this.NuevoNombreMarca;
-                            }
-                        }
-                        else
-                        {
-                            if (!string.IsNullOrEmpty(this.NuevoNombreMarca))
-                            {
-                                var marca = _db.Marcas.Find(Convert.ToInt32(modelo.IdMarca));
-                                marca.Nombre = this.NuevoNombreMarca;
-                            }
-                        }
-                    }
+                var modelo = _db.Modelos.Find(Convert.ToInt32(this.IdModeloConsolidable));
+
+                if (nuevoIdMarca.HasValue)
+                    modelo.IdMarca = nuevoIdMarca.Value;
+
+                if (!string.IsNullOrEmpty(this.NuevoNombreModelo))
+                    modelo.Nombre = this.NuevoNombreModelo;
+
+                if (!string.IsNullOrEmpty(this.NuevoNombreMarca))
+                {
+                    var marca = _db.Marcas.Find(Convert.ToInt32(modelo.IdMarca));
+                    marca.Nombre = this.NuevoNombreMarca;
                 }
             }
             _db.SaveChanges();
