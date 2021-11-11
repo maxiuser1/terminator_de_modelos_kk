@@ -50,7 +50,7 @@ namespace Sitio.Pages
             if (!string.IsNullOrEmpty(searchString))
             {
                 searchString = searchString.Replace("*", "%");
-                var sql = $"SELECT modelos.IdModelo, \r\nmodelos.Nombre NombreModelo, \r\nmodelos.IdMarca, \r\nmarcas.Nombre NombreMarca, \r\nvehiculos.IdTipoVehiculo,\r\ntiposvehiculos.Nombre NombreTipoVehiculo,\r\ncount(1) Cantidad \r\nFROM \r\nVehiculos \r\nJOIN Modelos ON Vehiculos.IdModelo = MODELOS.IdModelo \r\njoin marcas on modelos.IdMarca = marcas.IdMarca \r\nleft join TiposVehiculos on TiposVehiculos.IdTipoVehiculo = vehiculos.IdTipoVehiculo\r\nWHERE Modelos.Nombre like '{searchString}' \r\ngroup by modelos.IdModelo, modelos.Nombre , modelos.IdMarca, marcas.Nombre , vehiculos.IdTipoVehiculo, tiposvehiculos.Nombre \r\norder by modelos.Nombre";
+                var sql = $"SELECT modelos.IdModelo, \r\nmodelos.Nombre NombreModelo, \r\nmodelos.IdMarca, \r\nmarcas.Nombre NombreMarca, \r\nmodelos.IdTipoVehiculo,\r\ntiposvehiculos.Nombre NombreTipoVehiculo,\r\ncount(1) Cantidad \r\nFROM \r\nVehiculos \r\nJOIN Modelos ON Vehiculos.IdModelo = MODELOS.IdModelo \r\njoin marcas on modelos.IdMarca = marcas.IdMarca \r\nleft join TiposVehiculos on TiposVehiculos.IdTipoVehiculo = modelos.IdTipoVehiculo\r\nWHERE Modelos.Nombre like '{searchString}' \r\ngroup by modelos.IdModelo, modelos.Nombre , modelos.IdMarca, marcas.Nombre , modelos.IdTipoVehiculo, tiposvehiculos.Nombre \r\norder by modelos.Nombre";
                 var items = _db.ItemsModelo.FromSqlRaw(sql).AsQueryable().ToList();
 
                 foreach (var cadaItem in items)
@@ -83,29 +83,27 @@ namespace Sitio.Pages
                 NuevoNombreMarca = this.NuevoNombreMarca,
                 NuevoNombreModelo = this.NuevoNombreModelo,
                 NuevoNombreTipoVehiculo = this.NuevoNombreTipoVehiculo,
-                IdNuevoMarca = Int32.TryParse(this.NuevoIdMarca, out int parserMarcaId) ? parserMarcaId : (int?)null,
-                IdTipoVehiculo = Int32.TryParse(this.NuevoIdTipoVehiculo, out int parserTipo) ? parserTipo : (int?)null
+                IdNuevoMarca = int.TryParse(this.NuevoIdMarca, out int parserMarcaId) ? parserMarcaId : (int?)null,
+                IdTipoVehiculo = int.TryParse(this.NuevoIdTipoVehiculo, out int parserTipo) ? parserTipo : (int?)null
             };
+
+        
 
             foreach (var cada in Items.Where(t => t.Seleccionado))
             {
                 if (cada.IdModelo != Convert.ToInt32(this.IdModeloConsolidable))
                 {
+                    consolidacion.ItemConsolidacion.Add(new ItemConsolidacion
+                    {
+                        IdModeloSeleccionado = cada.IdModelo
+                    });
+
                     var vehiculos = _db.Vehiculos.Where(t => t.IdModelo == cada.IdModelo).ToList();
                     foreach (var cadaVehiculo in vehiculos)
                     {
-                        consolidacion.ItemConsolidacion.Add(new ItemConsolidacion
-                        {
-                            IdModeloSeleccionado = cadaVehiculo.IdModelo,
-                            IdMarca = cadaVehiculo.IdMarca,
-                            IdTipoVehiculo = cadaVehiculo.IdTipoVehiculo
-                        });
-
                         cadaVehiculo.IdModelo = consolidacion.IdModeloConsolidable.Value;
-
                         if (consolidacion.IdNuevoMarca.HasValue)
                             cadaVehiculo.IdMarca = consolidacion.IdNuevoMarca.Value;
-
                         if (consolidacion.IdTipoVehiculo.HasValue)
                             cadaVehiculo.IdTipoVehiculo = consolidacion.IdTipoVehiculo.Value;
                     }

@@ -1,0 +1,44 @@
+﻿@page
+@model Sitio.Pages.BitacoraModel
+@{
+}
+<div class="text-center">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Id Modelo Origen</th>
+                <th>Nuevo nombre modelo</th>
+                <th>Nuevo id marca</th>
+                <th>Nuevo nombre marca</th>
+                <th>Nuevo id tipo vehiculo</th>
+                <th>Nuevo nombre tipo vehiculo</th>
+                <th>Cambiados</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                @for (var i = 0; i < Model.Consolidaciones.Count(); i++)
+                {
+                    <tr>
+                        <td>@Model.Consolidaciones[i].IdModeloConsolidable</td>
+                        <td>@Model.Consolidaciones[i].NuevoNombreModelo</td>
+                        <td>@Model.Consolidaciones[i].IdNuevoMarca</td>
+                        <td>@Model.Consolidaciones[i].NuevoNombreMarca</td>
+                        <td>@Model.Consolidaciones[i].IdTipoVehiculo</td>
+                        <td>@Model.Consolidaciones[i].NuevoNombreTipoVehiculo</td>
+                        <td>
+
+                            @for (var j = 0; j < Model.Consolidaciones[i].ItemConsolidacion.Count(); j++)
+                            {
+                                <b style="white-space: nowrap">[</b>
+                                    @Model.Consolidaciones[i].ItemConsolidacion.ElementAt(j).IdModeloSeleccionado
+                                <b>]</b>
+                            }
+
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
