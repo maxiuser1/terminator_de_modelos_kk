@@ -13,6 +13,9 @@ namespace Sitio.ViewModels
         public int IdMarca { get; set; }
         public string NombreMarca { get; set; }
         public int Cantidad { get; set; }
+
+        public int? IdTipoVehiculo { get; set; }
+        public string NombreTipoVehiculo { get; set; }
     }
 
     public class ItemModeloViewModel
@@ -23,5 +26,7 @@ namespace Sitio.ViewModels
         public string NombreMarca { get; set; }
         public int Cantidad { get; set; }
         public bool Seleccionado { get; set; }
+        public int? IdTipoVehiculo { get; set; }
+        public string NombreTipoVehiculo { get; set; }
     }
 }

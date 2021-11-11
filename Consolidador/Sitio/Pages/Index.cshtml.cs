@@ -26,12 +26,19 @@ namespace Sitio.Pages
         public string NuevoIdMarca { get; set; }
 
         [BindProperty]
+        public string NuevoIdTipoVehiculo { get; set; }
+
+        [BindProperty]
         public string NuevoNombreModelo { get; set; }
+
         [BindProperty]
         public string NuevoNombreMarca { get; set; }
 
-        private readonly soapContext _db;
-        public IndexModel(soapContext db)
+        [BindProperty]
+        public string NuevoNombreTipoVehiculo { get; set; }
+
+        private readonly SoapContext _db;
+        public IndexModel(SoapContext db)
         {
             _db = db;
             this.Items = new List<ItemModeloViewModel>();
@@ -43,7 +50,8 @@ namespace Sitio.Pages
             if (!string.IsNullOrEmpty(searchString))
             {
                 searchString = searchString.Replace("*", "%");
-                var items = _db.ItemsModelo.FromSqlRaw($"SELECT \r\nmodelos.IdModelo, \r\nmodelos.Nombre NombreModelo, \r\nmodelos.IdMarca, \r\nmarcas.Nombre NombreMarca, \r\ncount(1) Cantidad\r\nFROM Vehiculos\r\nJOIN Modelos ON Vehiculos.IdModelo = MODELOS.IdModelo\r\njoin marcas on modelos.IdMarca = marcas.IdMarca\r\nWHERE Modelos.Nombre like '{searchString}'\r\ngroup by \r\nmodelos.IdModelo, \r\nmodelos.Nombre , \r\nmodelos.IdMarca, \r\nmarcas.Nombre order by modelos.Nombre").AsQueryable().ToList();
+                var sql = $"SELECT modelos.IdModelo, \r\nmodelos.Nombre NombreModelo, \r\nmodelos.IdMarca, \r\nmarcas.Nombre NombreMarca, \r\nvehiculos.IdTipoVehiculo,\r\ntiposvehiculos.Nombre NombreTipoVehiculo,\r\ncount(1) Cantidad \r\nFROM \r\nVehiculos \r\nJOIN Modelos ON Vehiculos.IdModelo = MODELOS.IdModelo \r\njoin marcas on modelos.IdMarca = marcas.IdMarca \r\nleft join TiposVehiculos on TiposVehiculos.IdTipoVehiculo = vehiculos.IdTipoVehiculo\r\nWHERE Modelos.Nombre like '{searchString}' \r\ngroup by modelos.IdModelo, modelos.Nombre , modelos.IdMarca, marcas.Nombre , vehiculos.IdTipoVehiculo, tiposvehiculos.Nombre \r\norder by modelos.Nombre";
+                var items = _db.ItemsModelo.FromSqlRaw(sql).AsQueryable().ToList();
 
                 foreach (var cadaItem in items)
                 {
@@ -54,6 +62,8 @@ namespace Sitio.Pages
                         IdMarca = cadaItem.IdMarca,
                         NombreMarca = cadaItem.NombreMarca,
                         Cantidad = cadaItem.Cantidad,
+                        IdTipoVehiculo = cadaItem.IdTipoVehiculo,
+                        NombreTipoVehiculo = cadaItem.NombreTipoVehiculo
                     });
                 }
 
@@ -62,11 +72,20 @@ namespace Sitio.Pages
 
         public IActionResult OnPost()
         {
-            int? nuevoIdMarca = null;
-            if (Int32.TryParse(this.NuevoIdMarca, out int tempIdMarca))
+            if (string.IsNullOrEmpty(this.IdModeloConsolidable))
+                return RedirectToPage("/Index", new { searchString = this.CurrentFilter });
+
+
+            var consolidacion = new Consolidacion
             {
-                nuevoIdMarca = tempIdMarca;
-            }
+                Fecha = DateTime.Now,
+                IdModeloConsolidable = Convert.ToInt32(this.IdModeloConsolidable),
+                NuevoNombreMarca = this.NuevoNombreMarca,
+                NuevoNombreModelo = this.NuevoNombreModelo,
+                NuevoNombreTipoVehiculo = this.NuevoNombreTipoVehiculo,
+                IdNuevoMarca = Int32.TryParse(this.NuevoIdMarca, out int parserMarcaId) ? parserMarcaId : (int?)null,
+                IdTipoVehiculo = Int32.TryParse(this.NuevoIdTipoVehiculo, out int parserTipo) ? parserTipo : (int?)null
+            };
 
             foreach (var cada in Items.Where(t => t.Seleccionado))
             {
@@ -75,26 +94,48 @@ namespace Sitio.Pages
                     var vehiculos = _db.Vehiculos.Where(t => t.IdModelo == cada.IdModelo).ToList();
                     foreach (var cadaVehiculo in vehiculos)
                     {
-                        cadaVehiculo.IdModelo = Convert.ToInt32(this.IdModeloConsolidable);
-                        if (nuevoIdMarca.HasValue)
-                            cadaVehiculo.IdMarca = nuevoIdMarca.Value;
+                        consolidacion.ItemConsolidacion.Add(new ItemConsolidacion
+                        {
+                            IdModeloSeleccionado = cadaVehiculo.IdModelo,
+                            IdMarca = cadaVehiculo.IdMarca,
+                            IdTipoVehiculo = cadaVehiculo.IdTipoVehiculo
+                        });
+
+                        cadaVehiculo.IdModelo = consolidacion.IdModeloConsolidable.Value;
+
+                        if (consolidacion.IdNuevoMarca.HasValue)
+                            cadaVehiculo.IdMarca = consolidacion.IdNuevoMarca.Value;
+
+                        if (consolidacion.IdTipoVehiculo.HasValue)
+                            cadaVehiculo.IdTipoVehiculo = consolidacion.IdTipoVehiculo.Value;
                     }
                 }
-
-                var modelo = _db.Modelos.Find(Convert.ToInt32(this.IdModeloConsolidable));
-
-                if (nuevoIdMarca.HasValue)
-                    modelo.IdMarca = nuevoIdMarca.Value;
-
-                if (!string.IsNullOrEmpty(this.NuevoNombreModelo))
-                    modelo.Nombre = this.NuevoNombreModelo;
-
-                if (!string.IsNullOrEmpty(this.NuevoNombreMarca))
-                {
-                    var marca = _db.Marcas.Find(Convert.ToInt32(modelo.IdMarca));
-                    marca.Nombre = this.NuevoNombreMarca;
-                }
             }
+
+            var modelo = _db.Modelos.Find(Convert.ToInt32(this.IdModeloConsolidable));
+
+            if (consolidacion.IdNuevoMarca.HasValue)
+                modelo.IdMarca = consolidacion.IdNuevoMarca.Value;
+
+            if (consolidacion.IdTipoVehiculo.HasValue)
+                modelo.IdTipoVehiculo = consolidacion.IdTipoVehiculo.Value;
+
+            if (!string.IsNullOrEmpty(this.NuevoNombreModelo))
+                modelo.Nombre = this.NuevoNombreModelo;
+
+            if (!string.IsNullOrEmpty(this.NuevoNombreMarca))
+            {
+                var marca = _db.Marcas.Find(Convert.ToInt32(modelo.IdMarca));
+                marca.Nombre = this.NuevoNombreMarca;
+            }
+
+            if (!string.IsNullOrEmpty(this.NuevoNombreTipoVehiculo))
+            {
+                var tipoVehiculo = _db.TiposVehiculos.Find(Convert.ToInt32(modelo.IdTipoVehiculo));
+                tipoVehiculo.Nombre = this.NuevoNombreTipoVehiculo;
+            }
+
+            _db.Consolidacion.Add(consolidacion);
             _db.SaveChanges();
             return RedirectToPage("/Index", new { searchString = this.CurrentFilter });
         }
