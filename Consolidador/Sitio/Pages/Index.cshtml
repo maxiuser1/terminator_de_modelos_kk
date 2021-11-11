@@ -1,0 +1,53 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+<div>
+    <form asp-page="./Index" method="get">
+        <input type="text" value="@Model.CurrentFilter" name="SearchString" />
+        <button type="submit">Go</button>
+    </form>
+
+</div>
+<div class="text-center">
+    <form method="post">
+        <table>
+            <thead>
+            <tr>
+                <th></th>
+                <th>Id modelo</th>
+                <th>Modelo</th>
+                <th>Id Marca</th>
+                <th>Marca</th>
+                <th>Cantidad</th>
+            </tr>
+            </thead>
+            <tbody>
+            @{
+                @for (var i = 0; i < Model.Items.Count(); i++)
+                {
+                    <tr>
+                        <td>
+                            <input type="hidden" asp-for="Items[i].IdModelo"/>
+                            <input asp-for="Items[i].Seleccionado"/>
+                        </td>
+                        <td>@Model.Items[i].IdModelo</td>
+                        <td>@Model.Items[i].NombreModelo</td>
+                        <td>@Model.Items[i].IdMarca</td>
+                        <td>@Model.Items[i].NombreMarca</td>
+                        <td>@Model.Items[i].Cantidad</td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+        <div>
+            <input type="hidden" asp-for="CurrentFilter" />
+            <input type="text" placeholder="Id modelo" asp-for="IdModeloConsolidable"/>
+            <input type="text" placeholder="Nuevo nombre marca" asp-for="NuevoNombreMarca"/>
+            <input type="text" placeholder="Nuevo nombre modelo" asp-for="NuevoNombreModelo"/>
+            <button type="submit">Consolidar</button>
+        </div>
+    </form>
+</div>
