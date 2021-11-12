@@ -39,11 +39,24 @@
                                     <input type="hidden" asp-for="Items[i].IdModelo"/>
                                     <input asp-for="Items[i].Seleccionado"/>
                                 </td>
-                                <td>@Model.Items[i].IdModelo</td>
+                                <td>
+                                    <button type="button" class="btnModelo" value="@Model.Items[i].IdModelo">
+                                        @Model.Items[i].IdModelo
+                                    </button>
+                                </td>
                                 <td>@Model.Items[i].NombreModelo</td>
-                                <td>@Model.Items[i].IdMarca</td>
+                                <td>
+                                    <button type="button" class="btnMarca" value="@Model.Items[i].IdMarca">
+                                        @Model.Items[i].IdMarca
+                                    </button>
+                                </td>
                                 <td>@Model.Items[i].NombreMarca</td>
-                                <td>@Model.Items[i].IdTipoVehiculo</td>
+                                <td>
+                                    <button type="button" class="btnTipoVehiculo" value="@Model.Items[i].IdTipoVehiculo">
+                                        @Model.Items[i].IdTipoVehiculo
+                                    </button>
+
+                                </td>
                                 <td>@Model.Items[i].NombreTipoVehiculo</td>
                                 <td>@Model.Items[i].Cantidad</td>
                             </tr>
@@ -99,8 +112,23 @@
 @section Scripts{
     <script type="text/javascript">
         $(document).ready(function() {
-            $("#checkAll").click(function(){
+            $("#checkAll").click(function() {
                 $('input:checkbox').not(this).prop('checked', this.checked);
+            });
+
+            $('.btnModelo').bind("click", function () {
+                var valorIdModelo = $(this).val();
+                $('#IdModeloConsolidable').val(valorIdModelo);
+            });
+
+            $('.btnMarca').bind("click", function () {
+                var valorIdMarca = $(this).val();
+                $('#NuevoIdMarca').val(valorIdMarca);
+            });
+
+            $('.btnTipoVehiculo').bind("click", function () {
+                var valorIdTipoVehiculo = $(this).val();
+                $('#NuevoIdTipoVehiculo').val(valorIdTipoVehiculo);
             });
         });
     </script>
