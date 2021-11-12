@@ -20,7 +20,7 @@
                 <table class="table table-striped">
                     <thead>
                     <tr>
-                        <th></th>
+                        <th><input type="checkbox" id="checkAll" /></th>
                         <th>Id modelo</th>
                         <th>Modelo</th>
                         <th>Id Marca</th>
@@ -95,3 +95,13 @@
       
     </form>
 </div>
+
+@section Scripts{
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $("#checkAll").click(function(){
+                $('input:checkbox').not(this).prop('checked', this.checked);
+            });
+        });
+    </script>
+}
